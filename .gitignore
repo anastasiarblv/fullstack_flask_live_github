@@ -1,0 +1,5 @@
+# Добавляем node_modules
+*node_modules
+# И добавляем виртуальную среду fullstack_env 
+fullstack_env 
+

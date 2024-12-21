@@ -1,0 +1,59 @@
+version: "3.9"
+services:
+# db service
+  db:
+    container_name: db
+    image: postgres:13
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - 5432:5432
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: natar@admin.com
+      PGADMIN_DEFAULT_PASSWORD: root
+    ports:
+      - "5000:80"
+    depends_on:
+      - db
+
+  # flask service
+  flaskapp:
+    container_name: flaskapp
+    image: flaskapp:1.0.0
+    build:
+      context: ./backend ## собираем наш контейнер из файла fullstack_flask_live\backend\flask.dockerfile
+      dockerfile: flask.dockerfile ## прописываем непосредственно имя нашего Dockerfile для flask: flask.dockerfile
+    ports:
+      - 4000:4000 ## порты как и в файле backend\flask.dockerfile
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/postgres ## где db - это название services для нашего postgres,
+      ## т.е. services для postgres тут в файле fullstack_flask_live\compose.yaml нами был ранее прописан как db, поэтому
+      ## и тут в качестве POSTGRES_HOST в DATABASE_URL мы прописываем db.
+    depends_on:
+      - db
+
+  #Next JS service
+  nextapp:
+    container_name: nextapp
+    image: nextapp:1.0.0
+    build:
+      context: ./frontend
+      dockerfile: next.dockerfile
+    ports:
+      - 3000:3000
+    environment:
+    - NEXT_PUBLIC_API_URL=http://localhost:4000
+    depends_on:
+      - flaskapp
+
+
+volumes:
+  pgdata: {}
